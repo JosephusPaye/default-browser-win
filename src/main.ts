@@ -123,6 +123,17 @@ export async function launch(url: string, options: { private?: boolean } = {}) {
     throw new Error('url must be a string with a valid URL');
   }
 
+  if (!options?.private) {
+    spawn(`start "" "${URL.parse(url).href}"`, {
+      detached: true,
+      shell: true,
+      stdio: 'ignore',
+      timeout: 5000,
+      windowsHide: true,
+    });
+    return;
+  }
+
   const {
     browser,
     shellCommand,
@@ -131,9 +142,7 @@ export async function launch(url: string, options: { private?: boolean } = {}) {
 
   const urlNormalized = URL.parse(url).href;
 
-  const launchUrl = options?.private
-    ? `${browser.privateSwitch} "${urlNormalized}"`
-    : `"${urlNormalized}"`;
+  const launchUrl = `${browser.privateSwitch} "${urlNormalized}"`;
 
   let launchArgs = shellCommandString.includes('%1')
     ? shellCommand.args.replace('"%1"', launchUrl).replace('%1', launchUrl)
@@ -143,9 +152,9 @@ export async function launch(url: string, options: { private?: boolean } = {}) {
     .replace(/--single-argument/gi, '') // Remove Chrome and derivatives' flag to process all args as a single arg
     .replace(/-osint/gi, ''); // Remove Firefox's OS integration flag
 
-  const finalCommand = `start "" "${shellCommand.exeFullPath}" ${launchArgs}`;
+  const command = `start "" "${shellCommand.exeFullPath}" ${launchArgs}`;
 
-  spawn(finalCommand, {
+  spawn(command, {
     detached: true,
     shell: true,
     stdio: 'ignore',
@@ -153,3 +162,9 @@ export async function launch(url: string, options: { private?: boolean } = {}) {
     windowsHide: true,
   });
 }
+
+async function main() {
+  await launch('https://google.com', { private: false });
+}
+
+main();

@@ -86,6 +86,8 @@ async function main() {
 main();
 ```
 
+**Note:** It's currently not possible to launch the original (pre-Chromium) Microsoft Edge in private mode. If it is the default browser, the URL will be launched in normal browsing mode.
+
 ## API
 
 ```ts
