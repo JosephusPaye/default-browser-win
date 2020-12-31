@@ -86,7 +86,7 @@ async function main() {
 main();
 ```
 
-**Note:** It's currently not possible to launch the original (pre-Chromium) Microsoft Edge in private mode. If it is the default browser, the URL will be launched in normal browsing mode.
+**NOTE:** It's currently not possible to launch the original (pre-Chromium) Microsoft Edge in private mode. If it is the default browser, the URL will be launched in normal browsing mode. You can disable this behavior by returning `false` from the `onUnableToOpenPrivately()` callback option passed to `launch()`.
 
 ## API
 
@@ -100,6 +100,22 @@ interface ShellCommand {
   exe: string;
   exeFullPath: string;
   args: string;
+}
+
+interface LaunchOptions {
+  /**
+   * Launch the URL in private mode.
+   */
+  private?: boolean;
+
+  /**
+   * Handle what happens when the default browser is one that can't be open
+   * in private mode. Return true to open anyway, or false to abort.
+   */
+  onUnableToOpenPrivately?: (
+    browser: KnownBrowser,
+    shellCommand: ShellCommand
+  ) => Promise<boolean>;
 }
 
 /**
@@ -116,12 +132,7 @@ function getDefaultBrowser(): Promise<{
  * Launch the default browser with the given URL, optionally in private/incognito mode.
  * @throws Throws if there's an error finding the default browser or if no default browser is found
  */
-function launch(
-  url: string,
-  options?: {
-    private?: boolean;
-  }
-): Promise<void>;
+function launch(url: string, options?: LaunchOptions): Promise<void>;
 ```
 
 ## Licence

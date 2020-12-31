@@ -14,6 +14,22 @@ export interface ShellCommand {
   args: string;
 }
 
+export interface LaunchOptions {
+  /**
+   * Launch the URL in private mode.
+   */
+  private?: boolean;
+
+  /**
+   * Handle what happens when the default browser is one that can't be open
+   * in private mode. Return true to open anyway, or false to abort.
+   */
+  onUnableToOpenPrivately?: (
+    browser: KnownBrowser,
+    shellCommand: ShellCommand
+  ) => Promise<boolean>;
+}
+
 const knownBrowsers: {
   [key: string]: KnownBrowser;
 } = {
@@ -118,7 +134,7 @@ export async function getDefaultBrowser() {
  * Launch the default browser with the given URL, optionally in private/incognito mode.
  * @throws Throws if there's an error finding the default browser or if no default browser is found
  */
-export async function launch(url: string, options: { private?: boolean } = {}) {
+export async function launch(url: string, options: LaunchOptions = {}) {
   if (!url || url.trim().length === 0) {
     throw new Error('url must be a string with a valid URL');
   }
@@ -139,6 +155,18 @@ export async function launch(url: string, options: { private?: boolean } = {}) {
     shellCommand,
     shellCommandString,
   } = await getDefaultBrowser();
+
+  // Handle browsers that can't be open in private mode
+  if (browser.privateSwitch.length === 0 && options?.onUnableToOpenPrivately) {
+    const proceed = await options.onUnableToOpenPrivately(
+      browser,
+      shellCommand
+    );
+
+    if (!proceed) {
+      return;
+    }
+  }
 
   const urlNormalized = URL.parse(url).href;
 
@@ -162,9 +190,3 @@ export async function launch(url: string, options: { private?: boolean } = {}) {
     windowsHide: true,
   });
 }
-
-async function main() {
-  await launch('https://google.com', { private: false });
-}
-
-main();
